@@ -10,10 +10,10 @@ CREATE OR REPLACE TYPE Dog_type AS OBJECT (
 
     MEMBER FUNCTION is_valid RETURN BOOLEAN,
     STATIC FUNCTION create_dog(
-        p_race VARCHAR(100), p_age INT, p_name VARCHAR(100), p_status VARCHAR, p_weight FLOAT
+        p_race VARCHAR, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
     ) RETURN Dog_type
 );
-
+/
 
 CREATE OR REPLACE TYPE BODY Dog_type AS
     MEMBER FUNCTION is_valid RETURN BOOLEAN IS
@@ -26,7 +26,7 @@ CREATE OR REPLACE TYPE BODY Dog_type AS
     END;
 
     STATIC FUNCTION create_dog(
-        p_race VARCHAR(100), p_age INT, p_name VARCHAR(100), p_status VARCHAR, p_weight FLOAT
+        p_race VARCHAR, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
     ) RETURN Dog_type IS
         v_dog Dog_type;
     BEGIN
