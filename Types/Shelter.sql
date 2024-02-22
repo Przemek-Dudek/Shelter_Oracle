@@ -28,9 +28,8 @@ CREATE OR REPLACE TYPE Shelter_type AS OBJECT (
         p_city VARCHAR2,
         p_number INT
     ) RETURN Shelter_type
-)
-NESTED TABLE dogs STORE AS dogs_table
-NESTED TABLE employees STORE AS employees_table;
+);
+/
 
 CREATE OR REPLACE TYPE BODY Shelter_type AS
     CONSTRUCTOR FUNCTION Shelter_type (

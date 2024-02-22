@@ -132,7 +132,9 @@ CREATE TABLE Client_Table OF CLIENT_TYPE (PRIMARY KEY (ID));
 
 CREATE TABLE Dog_Table OF DOG_TYPE (PRIMARY KEY (ID));
 
-CREATE TABLE Shelter_Table OF Shelter_type (PRIMARY KEY (ID));
+CREATE TABLE Shelter_Table OF Shelter_type (PRIMARY KEY (ID)); --nie działa
+
+
 
 
 
