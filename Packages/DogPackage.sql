@@ -7,7 +7,7 @@ CREATE OR REPLACE PACKAGE DogPackage AS
         p_status VARCHAR2,
         p_weight FLOAT
     );
-    FUNCTION GetDogRefById(dog_id IN INT) RETURN REF Dog_type;
+    PROCEDURE ShowDogDetails(dog_id IN INT);
 END DogPackage;
 /
 
@@ -50,15 +50,27 @@ CREATE OR REPLACE PACKAGE BODY DogPackage AS
         DBMS_OUTPUT.PUT_LINE('Added dog ' || p_name || ' with ID: ' || next_id || '.');
     END AddDog;
 
-    FUNCTION GetDogRefById(dog_id IN INT) RETURN REF Dog_type AS
-        dog_ref REF Dog_type;
+    PROCEDURE ShowDogDetails(dog_id IN INT) IS
+        v_race VARCHAR2(100);
+        v_age INT;
+        v_name VARCHAR2(100);
+        v_status VARCHAR2(20);
+        v_weight FLOAT;
     BEGIN
-        SELECT REF(d) INTO dog_ref FROM DOG_TABLE d WHERE d.ID = dog_id;
-        RETURN dog_ref;
+        SELECT race, age, name, status, weight INTO v_race, v_age, v_name, v_status, v_weight
+        FROM DOG_TABLE
+        WHERE ID = dog_id;
+
+        -- Print dog details
+        DBMS_OUTPUT.PUT_LINE('Dog ID: ' || dog_id);
+        DBMS_OUTPUT.PUT_LINE('Race: ' || v_race);
+        DBMS_OUTPUT.PUT_LINE('Age: ' || v_age);
+        DBMS_OUTPUT.PUT_LINE('Name: ' || v_name);
+        DBMS_OUTPUT.PUT_LINE('Status: ' || v_status);
+        DBMS_OUTPUT.PUT_LINE('Weight: ' || v_weight);
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
-            RETURN NULL;
-    END GetDogRefById;
-
+            DBMS_OUTPUT.PUT_LINE('Dog with ID ' || dog_id || ' not found.');
+    END ShowDogDetails;
 END DogPackage;
 /
