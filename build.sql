@@ -6,24 +6,131 @@ CREATE OR REPLACE TYPE Address_type AS OBJECT (
     number_ INT
 );
 
+
+
 CREATE SEQUENCE Client_sequence START WITH 1 INCREMENT BY 1;
 
 CREATE OR REPLACE TYPE Client_type AS OBJECT (
     ID INT,
     Name VARCHAR(100),
     Surname VARCHAR(100),
-    Phone VARCHAR(15)
+    Phone VARCHAR(15),
+
+    MEMBER FUNCTION get_name RETURN VARCHAR2,
+    MEMBER FUNCTION get_surname RETURN VARCHAR2,
+    MEMBER FUNCTION get_phone RETURN VARCHAR2,
+
+    STATIC FUNCTION create_client(
+        p_Name VARCHAR2,
+        p_Surname VARCHAR2,
+        p_Phone VARCHAR2
+    ) RETURN Client_type
 );
+/
+
+CREATE OR REPLACE TYPE BODY Client_type AS
+    MEMBER FUNCTION get_name RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.Name;
+    END get_name;
+
+    MEMBER FUNCTION get_surname RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.Surname;
+    END get_surname;
+
+    MEMBER FUNCTION get_phone RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.Phone;
+    END get_phone;
+
+    STATIC FUNCTION create_client(
+        p_Name VARCHAR2,
+        p_Surname VARCHAR2,
+        p_Phone VARCHAR2
+    ) RETURN Client_type IS
+        new_client Client_type;
+    BEGIN
+        new_client := Client_type(
+            Client_sequence.NEXTVAL,
+            p_Name,
+            p_Surname,
+            p_Phone
+        );
+        RETURN new_client;
+    END create_client;
+END;
+/
+
+
 
 CREATE SEQUENCE Employee_sequence START WITH 1 INCREMENT BY 1;
 
 CREATE OR REPLACE TYPE Employee_type AS OBJECT (
     ID INT,
-    name VARCHAR(100),
-    surname VARCHAR(100),
-    salary FLOAT,
-    date_of_hire DATE
+    Name VARCHAR(100),
+    Surname VARCHAR(100),
+    Salary FLOAT,
+    Date_of_hire DATE,
+
+    MEMBER FUNCTION get_name RETURN VARCHAR2,
+    MEMBER FUNCTION get_surname RETURN VARCHAR2,
+    MEMBER FUNCTION get_salary RETURN FLOAT,
+    MEMBER FUNCTION get_date_of_hire RETURN DATE,
+
+    STATIC FUNCTION create_employee(
+        p_Name VARCHAR2,
+        p_Surname VARCHAR2,
+        p_Salary FLOAT,
+        p_Date_of_hire DATE
+    ) RETURN Employee_type
 );
+/
+
+CREATE OR REPLACE TYPE BODY Employee_type AS
+    MEMBER FUNCTION get_name RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.Name;
+    END get_name;
+
+    MEMBER FUNCTION get_surname RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.Surname;
+    END get_surname;
+
+    MEMBER FUNCTION get_salary RETURN FLOAT IS
+    BEGIN
+        RETURN self.Salary;
+    END get_salary;
+
+    MEMBER FUNCTION get_date_of_hire RETURN DATE IS
+    BEGIN
+        RETURN self.Date_of_hire;
+    END get_date_of_hire;
+
+    STATIC FUNCTION create_employee(
+        p_Name VARCHAR2,
+        p_Surname VARCHAR2,
+        p_Salary FLOAT,
+        p_Date_of_hire DATE
+    ) RETURN Employee_type IS
+        new_employee Employee_type;
+    BEGIN
+        new_employee := Employee_type(
+            Employee_sequence.NEXTVAL,
+            p_Name,
+            p_Surname,
+            p_Salary,
+            p_Date_of_hire
+        );
+        RETURN new_employee;
+    END create_employee;
+END;
+/
+
+
+
+
 
 CREATE SEQUENCE Dog_sequence START WITH 1 INCREMENT BY 1;
 
@@ -36,6 +143,7 @@ CREATE OR REPLACE TYPE Dog_type AS OBJECT (
     weight FLOAT,
 
     MEMBER FUNCTION is_valid RETURN BOOLEAN,
+    MEMBER FUNCTION get_name RETURN VARCHAR2,
     STATIC FUNCTION create_dog(
         p_race VARCHAR, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
     ) RETURN Dog_type
@@ -51,6 +159,11 @@ CREATE OR REPLACE TYPE BODY Dog_type AS
 
         RETURN TRUE;
     END;
+
+    MEMBER FUNCTION get_name RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.name;
+    END get_name;
 
     STATIC FUNCTION create_dog(
         p_race VARCHAR, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
@@ -90,6 +203,8 @@ END;
 /
 
 
+
+
 CREATE SEQUENCE Adoption_sequence START WITH 1 INCREMENT BY 1;
 
 CREATE OR REPLACE TYPE Adoption_type AS OBJECT (
@@ -114,7 +229,6 @@ CREATE OR REPLACE TYPE BODY Adoption_type AS
             RETURN FALSE;
         END IF;
 
-        -- Assuming get_dog_status is defined and accessible
         v_dog_status := get_dog_status(self.dog);
 
         IF self.status NOT IN ('Rozpoczęta', 'Procesowanie', 'Zakończona') THEN
@@ -141,13 +255,6 @@ CREATE OR REPLACE TYPE BODY Adoption_type AS
     END;
 END;
 /
-
-
-
-
-
-
-
 
 
 
@@ -246,54 +353,43 @@ CREATE TABLE Client_Table OF CLIENT_TYPE (PRIMARY KEY (ID));
 
 --### CREATE PACKAGES ###
 
+
+
 CREATE OR REPLACE PACKAGE AdoptionPackage AS
     PROCEDURE ShowAdoptions;
-    PROCEDURE AddAdoption(
-        p_Dog_ID INT,
-        p_Client_ID INT,
-        p_Employee_ID INT,
-        p_Status VARCHAR2
-    );
     FUNCTION GetAdoptionRefById(adoption_id IN INT) RETURN REF Adoption_type;
 END AdoptionPackage;
 /
 
 CREATE OR REPLACE PACKAGE BODY AdoptionPackage AS
-
     PROCEDURE ShowAdoptions IS
-        adoptions_count NUMBER;
+        dog_name VARCHAR2(100);
+        client_name VARCHAR2(100);
+        client_surname VARCHAR2(100);
+        employee_name VARCHAR2(100);
+        employee_surname VARCHAR2(100);
+        dog_obj Dog_type;
+        client_obj Client_type;
+        employee_obj Employee_type;
     BEGIN
-        SELECT COUNT(*) INTO adoptions_count FROM ADOPTION_TABLE;
+        FOR r IN (SELECT dog, client, employee, status FROM ADOPTION_TABLE) LOOP
+            SELECT CAST(r.dog AS Dog_type) INTO dog_obj FROM dual;
+            SELECT CAST(r.client AS Client_type) INTO client_obj FROM dual;
+            SELECT CAST(r.employee AS Employee_type) INTO employee_obj FROM dual;
 
-        IF adoptions_count = 0 THEN
-            DBMS_OUTPUT.PUT_LINE('No adoptions to show');
-        ELSE
-            FOR r IN (SELECT ID, dog_ID, client_ID, employee_ID, status FROM ADOPTION_TABLE)
-            LOOP
-                DBMS_OUTPUT.PUT_LINE('ID: ' || r.ID);
-                DBMS_OUTPUT.PUT_LINE('Dog ID: ' || r.dog_ID);
-                DBMS_OUTPUT.PUT_LINE('Client ID: ' || r.client_ID);
-                DBMS_OUTPUT.PUT_LINE('Employee ID: ' || r.employee_ID);
-                DBMS_OUTPUT.PUT_LINE('Status: ' || r.status);
-                DBMS_OUTPUT.PUT_LINE('---------------------');
-            END LOOP;
-        END IF;
+            dog_name := dog_obj.get_name();
+            client_name := client_obj.get_name();
+            client_surname := client_obj.get_surname();
+            employee_name := employee_obj.get_name();
+            employee_surname := employee_obj.get_surname();
+
+            DBMS_OUTPUT.PUT_LINE('Dog Name: ' || dog_name);
+            DBMS_OUTPUT.PUT_LINE('Client Name: ' || client_name || ' ' || client_surname);
+            DBMS_OUTPUT.PUT_LINE('Employee Name: ' || employee_name || ' ' || employee_surname);
+            DBMS_OUTPUT.PUT_LINE('Status: ' || r.status);
+            DBMS_OUTPUT.PUT_LINE('---------------------');
+        END LOOP;
     END ShowAdoptions;
-
-    PROCEDURE AddAdoption(
-        p_Dog_ID INT,
-        p_Client_ID INT,
-        p_Employee_ID INT,
-        p_Status VARCHAR2
-    ) IS
-        next_id NUMBER;
-    BEGIN
-        next_id := Adoption_sequence.NEXTVAL;
-        INSERT INTO ADOPTION_TABLE
-        VALUES (Adoption_type(next_id, p_Dog_ID, p_Client_ID, p_Employee_ID, p_Status));
-        COMMIT;
-        DBMS_OUTPUT.PUT_LINE('Added adoption with ID: ' || next_id || '.');
-    END AddAdoption;
 
     FUNCTION GetAdoptionRefById(adoption_id IN INT) RETURN REF Adoption_type AS
         adoption_ref REF Adoption_type;
@@ -307,6 +403,7 @@ CREATE OR REPLACE PACKAGE BODY AdoptionPackage AS
 
 END AdoptionPackage;
 /
+
 
 
 CREATE OR REPLACE PACKAGE ClientPackage AS

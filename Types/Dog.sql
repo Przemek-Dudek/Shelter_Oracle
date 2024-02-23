@@ -10,6 +10,7 @@ CREATE OR REPLACE TYPE Dog_type AS OBJECT (
     weight FLOAT,
 
     MEMBER FUNCTION is_valid RETURN BOOLEAN,
+    MEMBER FUNCTION get_name RETURN VARCHAR2,
     STATIC FUNCTION create_dog(
         p_race VARCHAR, p_shelter SHELTER_TYPE, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
     ) RETURN Dog_type
@@ -23,13 +24,17 @@ CREATE OR REPLACE TYPE BODY Dog_type AS
             RETURN FALSE;
         END IF;
 
-        -- Check if the shelter is valid
         IF shelter IS NULL OR NOT shelter.is_valid THEN
             RETURN FALSE;
         END IF;
 
         RETURN TRUE;
     END;
+
+    MEMBER FUNCTION get_name RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.name;
+    END get_name;
 
     STATIC FUNCTION create_dog(
         p_race VARCHAR, p_shelter SHELTER_TYPE, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
