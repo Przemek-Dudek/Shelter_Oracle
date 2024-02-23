@@ -5,7 +5,7 @@ CREATE OR REPLACE TYPE Shelter_type AS OBJECT (
     opening_hour VARCHAR2(10),
     closing_hour VARCHAR2(10),
     address ADDRESS_TYPE,
-    feed_stock INT, -- New attribute
+    feed_stock INT,
 
     CONSTRUCTOR FUNCTION Shelter_type (
         p_opening_hour VARCHAR2,
@@ -13,7 +13,7 @@ CREATE OR REPLACE TYPE Shelter_type AS OBJECT (
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- Additional parameter for feed stock
+        p_feed_stock INT
     ) RETURN SELF AS RESULT,
 
     MEMBER FUNCTION is_valid RETURN BOOLEAN,
@@ -23,7 +23,7 @@ CREATE OR REPLACE TYPE Shelter_type AS OBJECT (
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- Additional parameter for feed stock
+        p_feed_stock INT
     ) RETURN Shelter_type
 );
 /
@@ -35,14 +35,14 @@ CREATE OR REPLACE TYPE BODY Shelter_type AS
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- Additional parameter for feed stock
+        p_feed_stock INT
     ) RETURN SELF AS RESULT IS
     BEGIN
         ID := Shelter_sequence.NEXTVAL;
         opening_hour := p_opening_hour;
         closing_hour := p_closing_hour;
         address := Address_type(p_street, p_city, p_number);
-        feed_stock := p_feed_stock; -- Set the feed stock attribute
+        feed_stock := p_feed_stock;
         RETURN;
     END;
 
@@ -58,7 +58,7 @@ CREATE OR REPLACE TYPE BODY Shelter_type AS
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- Additional parameter for feed stock
+        p_feed_stock INT
     ) RETURN Shelter_type IS
         new_shelter Shelter_type;
     BEGIN
@@ -68,7 +68,7 @@ CREATE OR REPLACE TYPE BODY Shelter_type AS
             p_street,
             p_city,
             p_number,
-            p_feed_stock -- Pass the feed stock parameter
+            p_feed_stock
         );
 
         IF NOT new_shelter.is_valid THEN
