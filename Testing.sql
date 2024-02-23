@@ -118,3 +118,71 @@ BEGIN
     END IF;
 END;
 /
+
+
+-- ### Testing for Employee
+-- Test Case 1: Add Employee
+BEGIN
+    EmployeePackage.AddEmployee('John', 'Doe', 5000, TO_DATE('2024-02-23', 'YYYY-MM-DD'));
+END;
+/
+
+-- Test Case 2: Show Employees
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Showing Employees ---');
+    EmployeePackage.ShowEmployees;
+END;
+/
+
+-- Test Case 3: Get Employee Reference By ID
+DECLARE
+    employee_id INT := 1; -- Replace with actual employee ID
+    employee_ref REF Employee_type;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Getting Employee Reference By ID ---');
+    employee_ref := EmployeePackage.GetEmployeeRefById(employee_id);
+    IF employee_ref IS NOT NULL THEN
+        DBMS_OUTPUT.PUT_LINE('Employee reference obtained successfully.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Employee with ID ' || employee_id || ' not found.');
+    END IF;
+END;
+/
+
+
+
+-- ### Testing for Adoptions ###
+-- Test procedure to show adoptions
+-- Test ShowAdoptions
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Showing Adoptions ---');
+    AdoptionPackage.ShowAdoptions;
+END;
+/
+
+
+-- Test AddAdoption
+DECLARE
+    dog_id INT := 1; -- Change to an existing dog ID
+    client_id INT := 1; -- Change to an existing client ID
+    employee_id INT := 1; -- Change to an existing employee ID
+    dog_ref REF Dog_type;
+    client_ref REF Client_type;
+    employee_ref REF Employee_type;
+BEGIN
+    SELECT REF(d) INTO dog_ref FROM DOG_TABLE d WHERE d.ID = dog_id;
+    SELECT REF(c) INTO client_ref FROM CLIENT_TABLE c WHERE c.ID = client_id;
+    SELECT REF(e) INTO employee_ref FROM EMPLOYEES_TABLE e WHERE e.ID = employee_id;
+
+    AdoptionPackage.AddAdoption(dog_ref, client_ref, employee_ref, 'Rozpoczęta');
+END;
+/
+
+-- Test ShowAdoptions
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('-----Showing adoptions:-----');
+    ADOPTIONPACKAGE.SHOWADOPTIONS();
+END;
+/
+
+
