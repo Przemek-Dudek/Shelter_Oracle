@@ -1,3 +1,5 @@
+CREATE TABLE Shelter_Table OF SHELTER_TYPE (PRIMARY KEY (ID));
+
 CREATE OR REPLACE PACKAGE ShelterPackage AS
     PROCEDURE ShowShelterInfo(p_shelter_id INT);
     PROCEDURE AddShelter(
@@ -6,8 +8,10 @@ CREATE OR REPLACE PACKAGE ShelterPackage AS
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- New parameter for feed stock
+        p_feed_stock INT
     );
+    FUNCTION Get_Shelter_By_Id(shelter_id IN INT)
+        RETURN Shelter_type;
 END ShelterPackage;
 /
 
@@ -22,7 +26,6 @@ CREATE OR REPLACE PACKAGE BODY ShelterPackage AS
         DBMS_OUTPUT.PUT_LINE('Shelter ID: ' || v_shelter.ID);
         DBMS_OUTPUT.PUT_LINE('Opening Hour: ' || v_shelter.opening_hour);
         DBMS_OUTPUT.PUT_LINE('Closing Hour: ' || v_shelter.closing_hour);
-        -- Output other shelter attributes as needed
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
             DBMS_OUTPUT.PUT_LINE('Shelter with ID ' || p_shelter_id || ' not found.');
@@ -36,7 +39,7 @@ CREATE OR REPLACE PACKAGE BODY ShelterPackage AS
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- New parameter for feed stock
+        p_feed_stock INT
     ) IS
         v_new_shelter Shelter_type;
     BEGIN
@@ -46,7 +49,7 @@ CREATE OR REPLACE PACKAGE BODY ShelterPackage AS
             p_street,
             p_city,
             p_number,
-            p_feed_stock -- Pass the feed stock parameter
+            p_feed_stock
         );
 
         -- Insert the new shelter into the table
