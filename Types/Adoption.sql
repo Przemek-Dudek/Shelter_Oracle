@@ -22,7 +22,6 @@ CREATE OR REPLACE TYPE BODY Adoption_type AS
             RETURN FALSE;
         END IF;
 
-        -- Assuming get_dog_status is defined and accessible
         v_dog_status := get_dog_status(self.dog);
 
         IF self.status NOT IN ('Rozpoczęta', 'Procesowanie', 'Zakończona') THEN
