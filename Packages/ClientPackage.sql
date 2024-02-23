@@ -5,7 +5,6 @@ CREATE OR REPLACE PACKAGE ClientPackage AS
         p_Surname VARCHAR2,
         p_Phone VARCHAR2
     );
-    FUNCTION GetClientRefById(client_id IN INT) RETURN REF Client_type;
 END ClientPackage;
 /
 
@@ -43,16 +42,6 @@ CREATE OR REPLACE PACKAGE BODY ClientPackage AS
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('Added client ' || p_Name || ' ' || p_Surname || ' with ID: ' || next_id || '.');
     END AddClient;
-
-    FUNCTION GetClientRefById(client_id IN INT) RETURN REF Client_type AS
-        client_ref REF Client_type;
-    BEGIN
-        SELECT REF(c) INTO client_ref FROM CLIENT_TABLE c WHERE c.ID = client_id;
-        RETURN client_ref;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RETURN NULL;
-    END GetClientRefById;
 
 END ClientPackage;
 /
