@@ -350,6 +350,7 @@ CREATE TABLE Employees_Table  OF EMPLOYEE_TYPE (PRIMARY KEY (ID));
 
 CREATE TABLE Client_Table OF CLIENT_TYPE (PRIMARY KEY (ID));
 
+CREATE TABLE Shelter_Table OF SHELTER_TYPE (PRIMARY KEY (ID));
 
 --### CREATE PACKAGES ###
 
@@ -627,13 +628,11 @@ CREATE OR REPLACE PACKAGE ShelterPackage AS
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- New parameter for feed stock
+        p_feed_stock INT
     );
 END ShelterPackage;
 /
 
-
---### TRIGGERS ###
 
 
 
