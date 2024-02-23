@@ -25,54 +25,6 @@ CREATE OR REPLACE TYPE Employee_type AS OBJECT (
     date_of_hire DATE
 );
 
-CREATE SEQUENCE Adoption_sequence START WITH 1 INCREMENT BY 1;
-
-CREATE OR REPLACE TYPE Adoption_type AS OBJECT (
-    ID INT,
-    dog_ID INT,
-    client_ID INT,
-    employee_ID INT,
-    status VARCHAR(20),
-
-    MEMBER FUNCTION is_valid RETURN BOOLEAN,
-    STATIC FUNCTION create_adoption(
-        p_dog_ID INT, p_client_ID INT, p_employee_ID INT, p_status VARCHAR
-    ) RETURN Adoption_type
-);
-/
-
-CREATE OR REPLACE TYPE BODY Adoption_type AS
-    MEMBER FUNCTION is_valid RETURN BOOLEAN IS
-    BEGIN
-        IF dog_ID IS NULL OR client_ID IS NULL OR employee_ID IS NULL THEN
-            RETURN FALSE;
-        END IF;
-
-        IF status NOT IN ('Rozpoczęta', 'Procesowanie', 'Zakończona') THEN
-            RETURN FALSE;
-        END IF;
-
-        RETURN TRUE;
-    END;
-
-    STATIC FUNCTION create_adoption(
-        p_dog_ID INT, p_client_ID INT, p_employee_ID INT, p_status VARCHAR
-    ) RETURN Adoption_type IS
-        v_adoption Adoption_type;
-    BEGIN
-        v_adoption := Adoption_type(
-            Adoption_sequence.NEXTVAL, p_dog_ID, p_client_ID, p_employee_ID, p_status
-        );
-
-        IF NOT v_adoption.is_valid THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Invalid adoption data');
-        END IF;
-
-        RETURN v_adoption;
-    END;
-END;
-/
-
 CREATE SEQUENCE Dog_sequence START WITH 1 INCREMENT BY 1;
 
 CREATE OR REPLACE TYPE Dog_type AS OBJECT (
@@ -118,6 +70,89 @@ CREATE OR REPLACE TYPE BODY Dog_type AS
 END;
 /
 
+CREATE TABLE Dog_Table OF DOG_TYPE (PRIMARY KEY (ID));
+
+
+CREATE OR REPLACE FUNCTION get_dog_status(dog_ref IN REF Dog_type)
+RETURN VARCHAR2
+IS
+    dog_status VARCHAR2(100);
+BEGIN
+    SELECT VALUE(d).status INTO dog_status FROM Dog_table d WHERE REF(d) = dog_ref;
+
+    RETURN dog_status;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 'Status Not Found';
+    WHEN OTHERS THEN
+        RETURN 'Error';
+END;
+/
+
+
+CREATE SEQUENCE Adoption_sequence START WITH 1 INCREMENT BY 1;
+
+CREATE OR REPLACE TYPE Adoption_type AS OBJECT (
+    ID INT,
+    dog REF Dog_type,
+    client REF Client_type,
+    employee REF Employee_type,
+    status VARCHAR(20),
+
+    MEMBER FUNCTION is_valid RETURN BOOLEAN,
+    STATIC FUNCTION create_adoption(
+        p_dog REF Dog_type, p_client REF Client_type, p_employee REF Employee_type, p_status VARCHAR
+    ) RETURN Adoption_type
+);
+/
+
+CREATE OR REPLACE TYPE BODY Adoption_type AS
+    MEMBER FUNCTION is_valid RETURN BOOLEAN IS
+        v_dog_status VARCHAR(20);
+    BEGIN
+        IF self.dog IS NULL OR self.client IS NULL OR self.employee IS NULL THEN
+            RETURN FALSE;
+        END IF;
+
+        -- Assuming get_dog_status is defined and accessible
+        v_dog_status := get_dog_status(self.dog);
+
+        IF self.status NOT IN ('Rozpoczęta', 'Procesowanie', 'Zakończona') THEN
+            RETURN FALSE;
+        END IF;
+
+        RETURN TRUE;
+    END;
+
+    STATIC FUNCTION create_adoption (
+        p_dog REF Dog_type, p_client REF Client_type, p_employee REF Employee_type, p_status VARCHAR
+    ) RETURN Adoption_type IS
+        new_adoption Adoption_type;
+    BEGIN
+        new_adoption := Adoption_type(
+            Adoption_sequence.NEXTVAL, p_dog, p_client, p_employee, p_status
+        );
+
+        IF NOT new_adoption.is_valid THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Invalid adoption data');
+        END IF;
+
+        RETURN new_adoption;
+    END;
+END;
+/
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE SEQUENCE Shelter_sequence START WITH 1 INCREMENT BY 1;
 
 CREATE OR REPLACE TYPE Shelter_type AS OBJECT (
@@ -125,7 +160,7 @@ CREATE OR REPLACE TYPE Shelter_type AS OBJECT (
     opening_hour VARCHAR2(10),
     closing_hour VARCHAR2(10),
     address ADDRESS_TYPE,
-    feed_stock INT, -- New attribute
+    feed_stock INT,
 
     CONSTRUCTOR FUNCTION Shelter_type (
         p_opening_hour VARCHAR2,
@@ -207,8 +242,6 @@ CREATE TABLE Adoption_Table OF ADOPTION_TYPE (PRIMARY KEY (ID));
 CREATE TABLE Employees_Table  OF EMPLOYEE_TYPE (PRIMARY KEY (ID));
 
 CREATE TABLE Client_Table OF CLIENT_TYPE (PRIMARY KEY (ID));
-
-CREATE TABLE Dog_Table OF DOG_TYPE (PRIMARY KEY (ID));
 
 
 --### CREATE PACKAGES ###
