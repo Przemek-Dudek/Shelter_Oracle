@@ -1,10 +1,45 @@
+-- ### Testing for Shelter ###
+-- Test AddShelter
+DECLARE
+    opening_hour VARCHAR2(10) := '08:00';
+    closing_hour VARCHAR2(10) := '18:00';
+    street VARCHAR2(100) := 'Main St';
+    city VARCHAR2(100) := 'New York';
+    number INT := 123;
+    feed_stock INT := 100;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Adding a new shelter:');
+    ShelterPackage.AddShelter(opening_hour, closing_hour, street, city, number, feed_stock);
+END;
+/
+
+-- Test ShowShelterInfo
+DECLARE
+    shelter_id INT := 2;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Showing info for shelter with ID ' || shelter_id);
+    ShelterPackage.ShowShelterInfo(shelter_id);
+END;
+
+
 -- ### Testing for Dog ###
 -- Test AddDog
+DECLARE
+    shelter SHELTER_TYPE;
+    opening_hour VARCHAR2(10) := '08:00';
+    closing_hour VARCHAR2(10) := '18:00';
+    street VARCHAR2(100) := 'Main St';
+    city VARCHAR2(100) := 'New York';
+    number INT := 123;
+    feed_stock INT := 100;
 BEGIN
-    DBMS_OUTPUT.PUT_LINE('Adding a dogs dog:');
-    DogPackage.AddDog('Labrador', 3, 'Max', 'Healthy', 25.5);
-    DogPackage.AddDog('German Shepherd', 2, 'Buddy', 'Healthy', 30.0);
-    DogPackage.AddDog('Golden Retriever', 1, 'Mikey', 'Healthy', 23.0);
+    DBMS_OUTPUT.PUT_LINE('Adding a dog:');
+
+    shelter := SHELTER_TYPE(opening_hour, closing_hour, street, city, number, feed_stock);
+
+    DogPackage.AddDog('Labrador', 3, 'Max', 'Healthy', 25.5, shelter);
+    DogPackage.AddDog('German Shepherd', 2, 'Buddy', 'Healthy', 30.0, shelter);
+    DogPackage.AddDog('Golden Retriever', 1, 'Mikey', 'Healthy', 23.0, shelter);
 END;
 /
 
@@ -60,31 +95,6 @@ BEGIN
     END IF;
 END;
 /
-
-
--- ### Testing for Shelter ###
--- Test AddShelter
-DECLARE
-    opening_hour VARCHAR2(10) := '08:00';
-    closing_hour VARCHAR2(10) := '18:00';
-    street VARCHAR2(100) := 'Main St';
-    city VARCHAR2(100) := 'New York';
-    number INT := 123;
-    feed_stock INT := 100;
-BEGIN
-    DBMS_OUTPUT.PUT_LINE('Adding a new shelter:');
-    ShelterPackage.AddShelter(opening_hour, closing_hour, street, city, number, feed_stock);
-END;
-/
-
--- Test ShowShelterInfo
-DECLARE
-    shelter_id INT := 4;
-BEGIN
-    DBMS_OUTPUT.PUT_LINE('Showing info for shelter with ID ' || shelter_id);
-    ShelterPackage.ShowShelterInfo(shelter_id);
-END;
-
 
 -- ### Testing for Client ###
 -- Test procedure to show clients

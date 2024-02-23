@@ -131,135 +131,6 @@ END;
 
 
 
-
-CREATE SEQUENCE Dog_sequence START WITH 1 INCREMENT BY 1;
-
-CREATE OR REPLACE TYPE Dog_type AS OBJECT (
-    ID INT,
-    race VARCHAR(100),
-    age INT,
-    name VARCHAR(100),
-    status VARCHAR(20),
-    weight FLOAT,
-
-    MEMBER FUNCTION is_valid RETURN BOOLEAN,
-    MEMBER FUNCTION get_name RETURN VARCHAR2,
-    STATIC FUNCTION create_dog(
-        p_race VARCHAR, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
-    ) RETURN Dog_type
-);
-/
-
-CREATE OR REPLACE TYPE BODY Dog_type AS
-    MEMBER FUNCTION is_valid RETURN BOOLEAN IS
-    BEGIN
-        IF race IS NULL OR age IS NULL OR name IS NULL OR status IS NULL OR weight IS NULL THEN
-            RETURN FALSE;
-        END IF;
-
-        RETURN TRUE;
-    END;
-
-    MEMBER FUNCTION get_name RETURN VARCHAR2 IS
-    BEGIN
-        RETURN self.name;
-    END get_name;
-
-    STATIC FUNCTION create_dog(
-        p_race VARCHAR, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
-    ) RETURN Dog_type IS
-        v_dog Dog_type;
-    BEGIN
-        v_dog := Dog_type(
-            Dog_sequence.NEXTVAL, p_race, p_age, p_name, p_status, p_weight
-        );
-
-        IF NOT v_dog.is_valid THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Invalid dog data');
-        END IF;
-
-        RETURN v_dog;
-    END;
-END;
-/
-
-CREATE TABLE Dog_Table OF DOG_TYPE (PRIMARY KEY (ID));
-
-
-CREATE OR REPLACE FUNCTION get_dog_status(dog_ref IN REF Dog_type)
-RETURN VARCHAR2
-IS
-    dog_status VARCHAR2(100);
-BEGIN
-    SELECT VALUE(d).status INTO dog_status FROM Dog_table d WHERE REF(d) = dog_ref;
-
-    RETURN dog_status;
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        RETURN 'Status Not Found';
-    WHEN OTHERS THEN
-        RETURN 'Error';
-END;
-/
-
-
-
-
-CREATE SEQUENCE Adoption_sequence START WITH 1 INCREMENT BY 1;
-
-CREATE OR REPLACE TYPE Adoption_type AS OBJECT (
-    ID INT,
-    dog REF Dog_type,
-    client REF Client_type,
-    employee REF Employee_type,
-    status VARCHAR(20),
-
-    MEMBER FUNCTION is_valid RETURN BOOLEAN,
-    STATIC FUNCTION create_adoption(
-        p_dog REF Dog_type, p_client REF Client_type, p_employee REF Employee_type, p_status VARCHAR
-    ) RETURN Adoption_type
-);
-/
-
-CREATE OR REPLACE TYPE BODY Adoption_type AS
-    MEMBER FUNCTION is_valid RETURN BOOLEAN IS
-        v_dog_status VARCHAR(20);
-    BEGIN
-        IF self.dog IS NULL OR self.client IS NULL OR self.employee IS NULL THEN
-            RETURN FALSE;
-        END IF;
-
-        v_dog_status := get_dog_status(self.dog);
-
-        IF self.status NOT IN ('Rozpoczęta', 'Procesowanie', 'Zakończona') THEN
-            RETURN FALSE;
-        END IF;
-
-        RETURN TRUE;
-    END;
-
-    STATIC FUNCTION create_adoption (
-        p_dog REF Dog_type, p_client REF Client_type, p_employee REF Employee_type, p_status VARCHAR
-    ) RETURN Adoption_type IS
-        new_adoption Adoption_type;
-    BEGIN
-        new_adoption := Adoption_type(
-            Adoption_sequence.NEXTVAL, p_dog, p_client, p_employee, p_status
-        );
-
-        IF NOT new_adoption.is_valid THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Invalid adoption data');
-        END IF;
-
-        RETURN new_adoption;
-    END;
-END;
-/
-
-
-
-
-
 CREATE SEQUENCE Shelter_sequence START WITH 1 INCREMENT BY 1;
 
 CREATE OR REPLACE TYPE Shelter_type AS OBJECT (
@@ -342,6 +213,154 @@ CREATE OR REPLACE TYPE BODY Shelter_type AS
 END;
 /
 
+
+
+
+
+CREATE SEQUENCE Dog_sequence START WITH 1 INCREMENT BY 1;
+
+CREATE OR REPLACE TYPE Dog_type AS OBJECT (
+    ID INT,
+    race VARCHAR(100),
+    shelter SHELTER_TYPE,
+    age INT,
+    name VARCHAR(100),
+    status VARCHAR(20),
+    weight FLOAT,
+
+    MEMBER FUNCTION is_valid RETURN BOOLEAN,
+    MEMBER FUNCTION get_name RETURN VARCHAR2,
+
+    CONSTRUCTOR FUNCTION Dog_type(
+        p_ID INT,
+        p_race VARCHAR,
+        p_shelter SHELTER_TYPE,
+        p_age INT,
+        p_name VARCHAR,
+        p_status VARCHAR,
+        p_weight FLOAT
+    ) RETURN SELF AS RESULT
+);
+/
+
+
+CREATE OR REPLACE TYPE BODY Dog_type AS
+    MEMBER FUNCTION is_valid RETURN BOOLEAN IS
+    BEGIN
+        IF race IS NULL OR age IS NULL OR name IS NULL OR status IS NULL OR weight IS NULL THEN
+            RETURN FALSE;
+        END IF;
+
+        IF shelter IS NULL OR NOT shelter.is_valid THEN
+            RETURN FALSE;
+        END IF;
+
+        RETURN TRUE;
+    END;
+
+    MEMBER FUNCTION get_name RETURN VARCHAR2 IS
+    BEGIN
+        RETURN self.name;
+    END get_name;
+
+    CONSTRUCTOR FUNCTION Dog_type(
+        p_ID INT,
+        p_race VARCHAR,
+        p_shelter SHELTER_TYPE,
+        p_age INT,
+        p_name VARCHAR,
+        p_status VARCHAR,
+        p_weight FLOAT
+    ) RETURN SELF AS RESULT IS
+    BEGIN
+        SELF.ID := p_ID;
+        SELF.race := p_race;
+        SELF.shelter := p_shelter;
+        SELF.age := p_age;
+        SELF.name := p_name;
+        SELF.status := p_status;
+        SELF.weight := p_weight;
+        RETURN;
+    END;
+END;
+/
+
+
+
+CREATE TABLE Dog_Table OF DOG_TYPE (PRIMARY KEY (ID));
+
+
+
+CREATE OR REPLACE FUNCTION get_dog_status(dog_ref IN REF Dog_type)
+RETURN VARCHAR2
+IS
+    dog_status VARCHAR2(100);
+BEGIN
+    SELECT VALUE(d).status INTO dog_status FROM Dog_table d WHERE REF(d) = dog_ref;
+
+    RETURN dog_status;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 'Status Not Found';
+    WHEN OTHERS THEN
+        RETURN 'Error';
+END;
+/
+
+
+
+
+CREATE SEQUENCE Adoption_sequence START WITH 1 INCREMENT BY 1;
+
+CREATE OR REPLACE TYPE Adoption_type AS OBJECT (
+    ID INT,
+    dog REF Dog_type,
+    client REF Client_type,
+    employee REF Employee_type,
+    status VARCHAR(20),
+
+    MEMBER FUNCTION is_valid RETURN BOOLEAN,
+    STATIC FUNCTION create_adoption(
+        p_dog REF Dog_type, p_client REF Client_type, p_employee REF Employee_type, p_status VARCHAR
+    ) RETURN Adoption_type
+);
+/
+
+CREATE OR REPLACE TYPE BODY Adoption_type AS
+    MEMBER FUNCTION is_valid RETURN BOOLEAN IS
+        v_dog_status VARCHAR(20);
+    BEGIN
+        IF self.dog IS NULL OR self.client IS NULL OR self.employee IS NULL THEN
+            RETURN FALSE;
+        END IF;
+
+        v_dog_status := get_dog_status(self.dog);
+
+        IF self.status NOT IN ('Rozpoczęta', 'Procesowanie', 'Zakończona') THEN
+            RETURN FALSE;
+        END IF;
+
+        RETURN TRUE;
+    END;
+
+    STATIC FUNCTION create_adoption (
+        p_dog REF Dog_type, p_client REF Client_type, p_employee REF Employee_type, p_status VARCHAR
+    ) RETURN Adoption_type IS
+        new_adoption Adoption_type;
+    BEGIN
+        new_adoption := Adoption_type(
+            Adoption_sequence.NEXTVAL, p_dog, p_client, p_employee, p_status
+        );
+
+        IF NOT new_adoption.is_valid THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Invalid adoption data');
+        END IF;
+
+        RETURN new_adoption;
+    END;
+END;
+/
+
 --### CREATE TABLES ###
 
 CREATE TABLE Adoption_Table OF ADOPTION_TYPE (PRIMARY KEY (ID));
@@ -349,6 +368,44 @@ CREATE TABLE Adoption_Table OF ADOPTION_TYPE (PRIMARY KEY (ID));
 CREATE TABLE Employees_Table  OF EMPLOYEE_TYPE (PRIMARY KEY (ID));
 
 CREATE TABLE Client_Table OF CLIENT_TYPE (PRIMARY KEY (ID));
+
+
+CREATE OR REPLACE FUNCTION Get_Client_By_Id(client_id IN INT)
+RETURN Client_type
+IS
+    client Client_type;
+BEGIN
+    SELECT Client_type(ID, Name, Surname, Phone)
+    INTO client
+    FROM CLIENT_TABLE
+    WHERE ID = client_id;
+
+    RETURN client;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+END Get_Client_By_Id;
+/
+
+
+
+CREATE OR REPLACE FUNCTION Get_Dog_By_Id(dog_id IN INT)
+    RETURN Dog_type
+IS
+    v_dog Dog_type;
+BEGIN
+    SELECT Dog_type(ID, race, shelter, age, name, status, weight)
+    INTO v_dog
+    FROM DOG_TABLE
+    WHERE ID = dog_id;
+
+    RETURN v_dog;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+END Get_Dog_By_Id;
+/
+
 
 
 --### CREATE PACKAGES ###
@@ -462,7 +519,8 @@ CREATE OR REPLACE PACKAGE DogPackage AS
         p_age INT,
         p_name VARCHAR2,
         p_status VARCHAR2,
-        p_weight FLOAT
+        p_weight FLOAT,
+        p_shelter SHELTER_TYPE
     );
     PROCEDURE ShowDogDetails(dog_id IN INT);
 END DogPackage;
@@ -496,13 +554,14 @@ CREATE OR REPLACE PACKAGE BODY DogPackage AS
         p_age INT,
         p_name VARCHAR2,
         p_status VARCHAR2,
-        p_weight FLOAT
+        p_weight FLOAT,
+        p_shelter SHELTER_TYPE
     ) IS
         next_id NUMBER;
     BEGIN
         next_id := Dog_sequence.NEXTVAL;
         INSERT INTO DOG_TABLE
-        VALUES (Dog_type(next_id, p_race, p_age, p_name, p_status, p_weight));
+        VALUES (Dog_type(next_id, p_race, p_age, p_name, p_status, p_weight, p_shelter));
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('Added dog ' || p_name || ' with ID: ' || next_id || '.');
     END AddDog;
@@ -531,6 +590,7 @@ CREATE OR REPLACE PACKAGE BODY DogPackage AS
     END ShowDogDetails;
 END DogPackage;
 /
+
 
 
 CREATE OR REPLACE PACKAGE EmployeePackage AS
@@ -596,6 +656,9 @@ END EmployeePackage;
 /
 
 
+
+CREATE TABLE Shelter_Table OF SHELTER_TYPE (PRIMARY KEY (ID));
+
 CREATE OR REPLACE PACKAGE ShelterPackage AS
     PROCEDURE ShowShelterInfo(p_shelter_id INT);
     PROCEDURE AddShelter(
@@ -604,13 +667,61 @@ CREATE OR REPLACE PACKAGE ShelterPackage AS
         p_street VARCHAR2,
         p_city VARCHAR2,
         p_number INT,
-        p_feed_stock INT -- New parameter for feed stock
+        p_feed_stock INT
     );
 END ShelterPackage;
 /
 
+CREATE OR REPLACE PACKAGE BODY ShelterPackage AS
+    PROCEDURE ShowShelterInfo(p_shelter_id INT) IS
+        v_shelter Shelter_type;
+    BEGIN
+        SELECT VALUE(s) INTO v_shelter
+        FROM Shelter_Table s
+        WHERE s.ID = p_shelter_id;
 
---### TRIGGERS ###
+        DBMS_OUTPUT.PUT_LINE('Shelter ID: ' || v_shelter.ID);
+        DBMS_OUTPUT.PUT_LINE('Opening Hour: ' || v_shelter.opening_hour);
+        DBMS_OUTPUT.PUT_LINE('Closing Hour: ' || v_shelter.closing_hour);
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('Shelter with ID ' || p_shelter_id || ' not found.');
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+    END ShowShelterInfo;
+
+    PROCEDURE AddShelter(
+        p_opening_hour VARCHAR2,
+        p_closing_hour VARCHAR2,
+        p_street VARCHAR2,
+        p_city VARCHAR2,
+        p_number INT,
+        p_feed_stock INT
+    ) IS
+        v_new_shelter Shelter_type;
+    BEGIN
+        v_new_shelter := Shelter_type.create_shelter(
+            p_opening_hour,
+            p_closing_hour,
+            p_street,
+            p_city,
+            p_number,
+            p_feed_stock
+        );
+
+        INSERT INTO Shelter_Table (ID, opening_hour, closing_hour, address, feed_stock)
+        VALUES (Shelter_sequence.NEXTVAL, v_new_shelter.opening_hour, v_new_shelter.closing_hour, v_new_shelter.address, v_new_shelter.feed_stock);
+
+        COMMIT;
+
+        DBMS_OUTPUT.PUT_LINE('Shelter added successfully with ID: ' || Shelter_sequence.CURRVAL);
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+    END AddShelter;
+END ShelterPackage;
+/
+
 
 
 

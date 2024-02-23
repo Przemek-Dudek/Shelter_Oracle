@@ -11,11 +11,19 @@ CREATE OR REPLACE TYPE Dog_type AS OBJECT (
 
     MEMBER FUNCTION is_valid RETURN BOOLEAN,
     MEMBER FUNCTION get_name RETURN VARCHAR2,
-    STATIC FUNCTION create_dog(
-        p_race VARCHAR, p_shelter SHELTER_TYPE, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
-    ) RETURN Dog_type
+
+    CONSTRUCTOR FUNCTION Dog_type(
+        p_ID INT,
+        p_race VARCHAR,
+        p_shelter SHELTER_TYPE,
+        p_age INT,
+        p_name VARCHAR,
+        p_status VARCHAR,
+        p_weight FLOAT
+    ) RETURN SELF AS RESULT
 );
 /
+
 
 CREATE OR REPLACE TYPE BODY Dog_type AS
     MEMBER FUNCTION is_valid RETURN BOOLEAN IS
@@ -36,20 +44,26 @@ CREATE OR REPLACE TYPE BODY Dog_type AS
         RETURN self.name;
     END get_name;
 
-    STATIC FUNCTION create_dog(
-        p_race VARCHAR, p_shelter SHELTER_TYPE, p_age INT, p_name VARCHAR, p_status VARCHAR, p_weight FLOAT
-    ) RETURN Dog_type IS
-        v_dog Dog_type;
+    CONSTRUCTOR FUNCTION Dog_type(
+        p_ID INT,
+        p_race VARCHAR,
+        p_shelter SHELTER_TYPE,
+        p_age INT,
+        p_name VARCHAR,
+        p_status VARCHAR,
+        p_weight FLOAT
+    ) RETURN SELF AS RESULT IS
     BEGIN
-        v_dog := Dog_type(
-            Dog_sequence.NEXTVAL, p_race, p_shelter, p_age, p_name, p_status, p_weight
-        );
+        SELF.ID := p_ID;
+        SELF.race := p_race;
+        SELF.shelter := p_shelter;
+        SELF.age := p_age;
+        SELF.name := p_name;
+        SELF.status := p_status;
+        SELF.weight := p_weight;
 
-        IF NOT v_dog.is_valid THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Invalid dog data');
-        END IF;
-
-        RETURN v_dog;
+        -- Return the initialized object
+        RETURN;
     END;
 END;
 /

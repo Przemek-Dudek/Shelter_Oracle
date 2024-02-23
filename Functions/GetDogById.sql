@@ -1,9 +1,9 @@
 CREATE OR REPLACE FUNCTION Get_Dog_By_Id(dog_id IN INT)
-RETURN Dog_type
+    RETURN Dog_type
 IS
     v_dog Dog_type;
 BEGIN
-    SELECT Dog_type(ID, race, age, name, status, weight)
+    SELECT Dog_type(ID, race, shelter, age, name, status, weight)
     INTO v_dog
     FROM DOG_TABLE
     WHERE ID = dog_id;

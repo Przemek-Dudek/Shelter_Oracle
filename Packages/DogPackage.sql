@@ -5,7 +5,8 @@ CREATE OR REPLACE PACKAGE DogPackage AS
         p_age INT,
         p_name VARCHAR2,
         p_status VARCHAR2,
-        p_weight FLOAT
+        p_weight FLOAT,
+        p_shelter SHELTER_TYPE
     );
     PROCEDURE ShowDogDetails(dog_id IN INT);
 END DogPackage;
@@ -39,13 +40,14 @@ CREATE OR REPLACE PACKAGE BODY DogPackage AS
         p_age INT,
         p_name VARCHAR2,
         p_status VARCHAR2,
-        p_weight FLOAT
+        p_weight FLOAT,
+        p_shelter SHELTER_TYPE
     ) IS
         next_id NUMBER;
     BEGIN
         next_id := Dog_sequence.NEXTVAL;
         INSERT INTO DOG_TABLE
-        VALUES (Dog_type(next_id, p_race, p_age, p_name, p_status, p_weight));
+        VALUES (Dog_type(next_id, p_race, p_age, p_name, p_status, p_weight, p_shelter));
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('Added dog ' || p_name || ' with ID: ' || next_id || '.');
     END AddDog;
