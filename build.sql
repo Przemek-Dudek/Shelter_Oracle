@@ -358,6 +358,12 @@ CREATE TABLE Client_Table OF CLIENT_TYPE (PRIMARY KEY (ID));
 CREATE OR REPLACE PACKAGE AdoptionPackage AS
     PROCEDURE ShowAdoptions;
     FUNCTION GetAdoptionRefById(adoption_id IN INT) RETURN REF Adoption_type;
+    PROCEDURE AddAdoption(
+        p_dog_ref REF Dog_type,
+        p_client_ref REF Client_type,
+        p_employee_ref REF Employee_type,
+        p_status VARCHAR2
+    );
 END AdoptionPackage;
 /
 
@@ -368,21 +374,22 @@ CREATE OR REPLACE PACKAGE BODY AdoptionPackage AS
         client_surname VARCHAR2(100);
         employee_name VARCHAR2(100);
         employee_surname VARCHAR2(100);
-        dog_obj Dog_type;
-        client_obj Client_type;
-        employee_obj Employee_type;
     BEGIN
-        FOR r IN (SELECT dog, client, employee, status FROM ADOPTION_TABLE) LOOP
-            SELECT CAST(r.dog AS Dog_type) INTO dog_obj FROM dual;
-            SELECT CAST(r.client AS Client_type) INTO client_obj FROM dual;
-            SELECT CAST(r.employee AS Employee_type) INTO employee_obj FROM dual;
+        FOR r IN (SELECT a.dog.ID AS dog_id,
+                         a.client.ID AS client_id,
+                         a.employee.ID AS employee_id,
+                         a.status
+                  FROM ADOPTION_TABLE a) LOOP
+            -- Retrieve dog details
+            SELECT d.name INTO dog_name FROM DOG_TABLE d WHERE d.ID = r.dog_id;
 
-            dog_name := dog_obj.get_name();
-            client_name := client_obj.get_name();
-            client_surname := client_obj.get_surname();
-            employee_name := employee_obj.get_name();
-            employee_surname := employee_obj.get_surname();
+            -- Retrieve client details
+            SELECT c.name, c.surname INTO client_name, client_surname FROM CLIENT_TABLE c WHERE c.ID = r.client_id;
 
+            -- Retrieve employee details
+            SELECT e.name, e.surname INTO employee_name, employee_surname FROM EMPLOYEES_TABLE e WHERE e.ID = r.employee_id;
+
+            -- Output adoption details
             DBMS_OUTPUT.PUT_LINE('Dog Name: ' || dog_name);
             DBMS_OUTPUT.PUT_LINE('Client Name: ' || client_name || ' ' || client_surname);
             DBMS_OUTPUT.PUT_LINE('Employee Name: ' || employee_name || ' ' || employee_surname);
@@ -400,6 +407,22 @@ CREATE OR REPLACE PACKAGE BODY AdoptionPackage AS
         WHEN NO_DATA_FOUND THEN
             RETURN NULL;
     END GetAdoptionRefById;
+
+    PROCEDURE AddAdoption(
+        p_dog_ref REF Dog_type,
+        p_client_ref REF Client_type,
+        p_employee_ref REF Employee_type,
+        p_status VARCHAR2
+    ) IS
+    BEGIN
+        -- Insert the adoption into the ADOPTION_TABLE
+        INSERT INTO ADOPTION_TABLE (ID, dog, client, employee, status)
+        VALUES (Adoption_sequence.NEXTVAL, p_dog_ref, p_client_ref, p_employee_ref, p_status);
+
+        COMMIT;
+        DBMS_OUTPUT.PUT_LINE('Adoption added successfully.');
+    END AddAdoption;
+
 
 END AdoptionPackage;
 /
