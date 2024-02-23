@@ -79,25 +79,24 @@ END;
 
 -- Test ShowShelterInfo
 DECLARE
-    shelter_id INT := 4;
+    shelter_id INT := 2;
 BEGIN
     DBMS_OUTPUT.PUT_LINE('Showing info for shelter with ID ' || shelter_id);
     ShelterPackage.ShowShelterInfo(shelter_id);
 END;
 
+-- Test procedure to add a client
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('--- Adding Client ---');
+    ClientPackage.AddClient('John', 'Doe', '123456789');
+END;
+/
 
 -- ### Testing for Client ###
 -- Test procedure to show clients
 BEGIN
     DBMS_OUTPUT.PUT_LINE('--- Showing Clients ---');
     ClientPackage.ShowClients;
-END;
-/
-
--- Test procedure to add a client
-BEGIN
-    DBMS_OUTPUT.PUT_LINE('--- Adding Client ---');
-    ClientPackage.AddClient('John', 'Doe', '123456789');
 END;
 /
 
@@ -123,7 +122,7 @@ END;
 -- ### Testing for Employee
 -- Test Case 1: Add Employee
 BEGIN
-    EmployeePackage.AddEmployee('John', 'Doe', 5000, TO_DATE('2024-02-23', 'YYYY-MM-DD'));
+    EmployeePackage.AddEmployee('John', 'Smith', 5000, TO_DATE('2024-02-23', 'YYYY-MM-DD'));
 END;
 /
 
@@ -177,12 +176,4 @@ BEGIN
     AdoptionPackage.AddAdoption(dog_ref, client_ref, employee_ref, 'Rozpoczęta');
 END;
 /
-
--- Test ShowAdoptions
-BEGIN
-    DBMS_OUTPUT.PUT_LINE('-----Showing adoptions:-----');
-    ADOPTIONPACKAGE.SHOWADOPTIONS();
-END;
-/
-
 
